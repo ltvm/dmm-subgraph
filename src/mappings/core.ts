@@ -18,7 +18,9 @@ import {
   updateDmmDayData,
   updatePairHourData,
   updatePoolDayData,
-  updatePoolHourData
+  updatePoolHourData,
+  updateBundlePricePoint,
+  updateTokenPricePoint
 } from './dayUpdates'
 import { getEthPriceInUSD, findEthPerToken, getTrackedVolumeUSD, getTrackedLiquidityUSD } from './pricing'
 import {
@@ -668,11 +670,15 @@ export function handleSync(event: Sync): void {
   bundle.ethPrice = getEthPriceInUSD()
   log.debug('--------------eth price ----------------- {}', [bundle.ethPrice.toString()])
   bundle.save()
+  updateBundlePricePoint(event, bundle.ethPrice)
 
   token0.derivedETH = findEthPerToken(token0 as Token, event)
   token1.derivedETH = findEthPerToken(token1 as Token, event)
   token0.save()
   token1.save()
+
+  updateTokenPricePoint(event, token0.id, token0.derivedETH)
+  updateTokenPricePoint(event, token1.id, token1.derivedETH)
 
   // get tracked liquidity - will be 0 if neither is in whitelist
   let trackedLiquidityETH = ZERO_BD

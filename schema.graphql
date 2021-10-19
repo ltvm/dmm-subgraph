@@ -481,3 +481,20 @@ type Withdraw @entity {
   stakeToken: Bytes!
   amount: BigInt!
 }
+
+type BundlePoint @entity {
+  # timestamp as ID
+  id: ID!
+  timestamp: Int!
+  ethPrice: BigDecimal! # price of ETH usd
+}
+
+type TokenPricePoint @entity {
+  id: ID!
+  token: Token!
+
+  timestamp: Int!
+
+  # derived prices
+  derivedETH: BigDecimal!
+} 

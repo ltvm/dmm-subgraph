@@ -1,6 +1,6 @@
-import { PairHourData, PoolHourData } from './../types/schema'
+import { BundlePoint, PairHourData, PoolHourData, TokenPricePoint } from './../types/schema'
 /* eslint-disable prefer-const */
-import { BigInt, ethereum } from '@graphprotocol/graph-ts'
+import { BigDecimal, BigInt, ethereum } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS } from '../config/constants'
 import {
   Pair,
@@ -14,6 +14,35 @@ import {
   PoolDayData
 } from '../types/schema'
 import { ONE_BI, ZERO_BD, ZERO_BI } from './utils'
+
+export function updateBundlePricePoint(event: ethereum.Event, ethPrice: BigDecimal): void {
+  let timestamp = event.block.timestamp.toI32()
+  let roundedTimestamp = (timestamp / 60) * 60
+
+  let point = BundlePoint.load(roundedTimestamp.toString())
+  if (point === null) {
+    point = new BundlePoint(roundedTimestamp.toString())
+  }
+  point.timestamp = roundedTimestamp
+  point.ethPrice = ethPrice
+  point.save()
+}
+
+export function updateTokenPricePoint(event: ethereum.Event, tokenID: string, derivedETH: BigDecimal): void {
+  let timestamp = event.block.timestamp.toI32()
+  let roundedTimestamp = (timestamp / 60) * 60
+
+  let pointID = tokenID.concat('-').concat(roundedTimestamp.toString())
+
+  let point = TokenPricePoint.load(roundedTimestamp.toString())
+  if (point === null) {
+    point = new TokenPricePoint(roundedTimestamp.toString())
+  }
+  point.timestamp = roundedTimestamp
+  point.token = tokenID
+  point.derivedETH = derivedETH
+  point.save()
+}
 
 export function updateDmmDayData(event: ethereum.Event): DmmDayData {
   let factory = DmmFactory.load(FACTORY_ADDRESS)
