@@ -1,4 +1,4 @@
-import { BundlePoint, PairHourData, PoolHourData, TokenPricePoint } from './../types/schema'
+import { BundlePoint, PairHourData, PoolHourData, TokenPricePoint } from '../types/schema'
 /* eslint-disable prefer-const */
 import { BigDecimal, BigInt, ethereum } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS } from '../config/constants'
@@ -11,7 +11,9 @@ import {
   DmmDayData,
   PairDayData,
   TokenDayData,
-  PoolDayData
+  PoolDayData,
+  TokenHourData,
+  TokenMinuteData
 } from '../types/schema'
 import { ONE_BI, ZERO_BD, ZERO_BI } from './utils'
 
@@ -34,9 +36,9 @@ export function updateTokenPricePoint(event: ethereum.Event, tokenID: string, de
 
   let pointID = tokenID.concat('-').concat(roundedTimestamp.toString())
 
-  let point = TokenPricePoint.load(roundedTimestamp.toString())
+  let point = TokenPricePoint.load(pointID)
   if (point === null) {
-    point = new TokenPricePoint(roundedTimestamp.toString())
+    point = new TokenPricePoint(pointID)
   }
   point.timestamp = roundedTimestamp
   point.token = tokenID
@@ -225,4 +227,96 @@ export function updateTokenDayData(token: Token, event: ethereum.Event): TokenDa
   // updateStoredPairs(tokenDayData as TokenDayData, dayPairID)
 
   return tokenDayData as TokenDayData
+}
+
+export function updateTokenHourData(token: Token, event: ethereum.Event): TokenHourData {
+  let bundle = Bundle.load('1')
+  let timestamp = event.block.timestamp.toI32()
+  let hourIndex = timestamp / 3600 // get unique hour within unix history
+  let hourStartUnix = hourIndex * 3600 // want the rounded effect
+  let tokenHourID = token.id
+    .toString()
+    .concat('-')
+    .concat(hourIndex.toString())
+  let tokenHourData = TokenHourData.load(tokenHourID)
+  let tokenPrice = token.derivedETH.times(bundle.ethPrice)
+
+  if (tokenHourData === null) {
+    tokenHourData = new TokenHourData(tokenHourID)
+    tokenHourData.periodStartUnix = hourStartUnix
+    tokenHourData.token = token.id
+    tokenHourData.volume = ZERO_BD
+    tokenHourData.volumeUSD = ZERO_BD
+    tokenHourData.untrackedVolumeUSD = ZERO_BD
+    tokenHourData.feesUSD = ZERO_BD
+    tokenHourData.numberOfTxns = ZERO_BI
+    tokenHourData.open = tokenPrice
+    tokenHourData.high = tokenPrice
+    tokenHourData.low = tokenPrice
+    tokenHourData.close = tokenPrice
+  }
+
+  if (tokenPrice.gt(tokenHourData.high)) {
+    tokenHourData.high = tokenPrice
+  }
+
+  if (tokenPrice.lt(tokenHourData.low)) {
+    tokenHourData.low = tokenPrice
+  }
+
+  tokenHourData.close = tokenPrice
+  tokenHourData.priceUSD = tokenPrice
+  tokenHourData.totalLiquidityToken = token.totalLiquidity
+  tokenHourData.totalLiquidityETH = token.totalLiquidity.times(token.derivedETH)
+  tokenHourData.totalLiquidityUSD = tokenHourData.totalLiquidityETH.times(bundle.ethPrice)
+  tokenHourData.numberOfTxns = tokenHourData.numberOfTxns.plus(ONE_BI)
+  tokenHourData.save()
+
+  return tokenHourData as TokenHourData
+}
+
+export function updateTokenMinuteData(token: Token, event: ethereum.Event): TokenMinuteData {
+  let bundle = Bundle.load('1')
+  let timestamp = event.block.timestamp.toI32()
+  let minuteIndex = timestamp / 60 // get unique minute within unix history
+  let minuteStartUnix = minuteIndex * 60 // want the rounded effect
+  let tokenMinuteID = token.id
+    .toString()
+    .concat('-')
+    .concat(minuteIndex.toString())
+  let tokenMinuteData = TokenMinuteData.load(tokenMinuteID)
+  let tokenPrice = token.derivedETH.times(bundle.ethPrice)
+
+  if (tokenMinuteData === null) {
+    tokenMinuteData = new TokenMinuteData(tokenMinuteID)
+    tokenMinuteData.periodStartUnix = minuteStartUnix
+    tokenMinuteData.token = token.id
+    tokenMinuteData.volume = ZERO_BD
+    tokenMinuteData.volumeUSD = ZERO_BD
+    tokenMinuteData.untrackedVolumeUSD = ZERO_BD
+    tokenMinuteData.feesUSD = ZERO_BD
+    tokenMinuteData.numberOfTxns = ZERO_BI
+    tokenMinuteData.open = tokenPrice
+    tokenMinuteData.high = tokenPrice
+    tokenMinuteData.low = tokenPrice
+    tokenMinuteData.close = tokenPrice
+  }
+
+  if (tokenPrice.gt(tokenMinuteData.high)) {
+    tokenMinuteData.high = tokenPrice
+  }
+
+  if (tokenPrice.lt(tokenMinuteData.low)) {
+    tokenMinuteData.low = tokenPrice
+  }
+
+  tokenMinuteData.close = tokenPrice
+  tokenMinuteData.priceUSD = tokenPrice
+  tokenMinuteData.totalLiquidityToken = token.totalLiquidity
+  tokenMinuteData.totalLiquidityETH = token.totalLiquidity.times(token.derivedETH)
+  tokenMinuteData.totalLiquidityUSD = tokenMinuteData.totalLiquidityETH.times(bundle.ethPrice)
+  tokenMinuteData.numberOfTxns = tokenMinuteData.numberOfTxns.plus(ONE_BI)
+  tokenMinuteData.save()
+
+  return tokenMinuteData as TokenMinuteData
 }

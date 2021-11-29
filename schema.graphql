@@ -422,6 +422,76 @@ type TokenDayData @entity {
   priceUSD: BigDecimal!
 }
 
+type TokenHourData @entity {
+  # token address concatendated with date
+  id: ID!
+  # unix timestamp for start of hour
+  periodStartUnix: Int!
+  # pointer to token
+  token: Token!
+  # volume in token units
+  volume: BigDecimal!
+  # volume in derived USD
+  volumeUSD: BigDecimal!
+  # volume in USD even on pools with less reliable USD values
+  untrackedVolumeUSD: BigDecimal!
+  # liquidity across all pools in token units
+  totalLiquidityToken: BigDecimal!
+  # liquidity across all pools in native token units
+  totalLiquidityETH: BigDecimal!
+  # liquidity across all pools in derived USD
+  totalLiquidityUSD: BigDecimal!
+  # number of txs in this period
+  numberOfTxns: BigInt!
+  # price at end of period in USD
+  priceUSD: BigDecimal!
+  # fees in USD
+  feesUSD: BigDecimal!
+  # opening price USD
+  open: BigDecimal!
+  # high price USD
+  high: BigDecimal!
+  # low price USD
+  low: BigDecimal!
+  # close price USD
+  close: BigDecimal!
+}
+
+type TokenMinuteData @entity {
+  # token address concatendated with date
+  id: ID!
+  # unix timestamp for start of minute
+  periodStartUnix: Int!
+  # pointer to token
+  token: Token!
+  # volume in token units
+  volume: BigDecimal!
+  # volume in derived USD
+  volumeUSD: BigDecimal!
+  # volume in USD even on pools with less reliable USD values
+  untrackedVolumeUSD: BigDecimal!
+  # liquidity across all pools in token units
+  totalLiquidityToken: BigDecimal!
+  # liquidity across all pools in native token units
+  totalLiquidityETH: BigDecimal!
+  # liquidity across all pools in derived USD
+  totalLiquidityUSD: BigDecimal!
+  # number of txs in this period
+  numberOfTxns: BigInt!
+  # price at end of period in USD
+  priceUSD: BigDecimal!
+  # fees in USD
+  feesUSD: BigDecimal!
+  # opening price USD
+  open: BigDecimal!
+  # high price USD
+  high: BigDecimal!
+  # low price USD
+  low: BigDecimal!
+  # close price USD
+  close: BigDecimal!
+}
+
 type KyberFairLaunch @entity {
   id: ID!
 
@@ -497,4 +567,4 @@ type TokenPricePoint @entity {
 
   # derived prices
   derivedETH: BigDecimal!
-} 
+}

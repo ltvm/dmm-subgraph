@@ -15,13 +15,15 @@ import {
 import {
   updatePairDayData,
   updateTokenDayData,
+  updateTokenHourData,
+  updateTokenMinuteData,
   updateDmmDayData,
   updatePairHourData,
   updatePoolDayData,
   updatePoolHourData,
   updateBundlePricePoint,
   updateTokenPricePoint
-} from './dayUpdates'
+} from './intervalUpdates'
 import { getEthPriceInUSD, findEthPerToken, getTrackedVolumeUSD, getTrackedLiquidityUSD } from './pricing'
 import {
   createUser,
@@ -679,6 +681,12 @@ export function handleSync(event: Sync): void {
 
   updateTokenPricePoint(event, token0.id, token0.derivedETH)
   updateTokenPricePoint(event, token1.id, token1.derivedETH)
+
+  updateTokenHourData(token0 as Token, event)
+  updateTokenHourData(token1 as Token, event)
+
+  updateTokenMinuteData(token0 as Token, event)
+  updateTokenMinuteData(token1 as Token, event)
 
   // get tracked liquidity - will be 0 if neither is in whitelist
   let trackedLiquidityETH = ZERO_BD
