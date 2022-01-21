@@ -576,8 +576,9 @@ export function handleSync(event: Sync): void {
   let factory = DmmFactory.load(FACTORY_ADDRESS)
 
   // reset factory liquidity by subtracting onluy tarcked liquidity
-  factory.totalLiquidityETH = factory.totalLiquidityETH.minus(pool.trackedReserveETH)
+  factory.totalLiquidityETH = factory.totalLiquidityETH.minus(pool.reserveETH)
   factory.totalAmplifiedLiquidityETH = factory.totalAmplifiedLiquidityETH.minus(pool.amplifiedTrackedLiquidityEth)
+  factory.totalLiquidityUSD = factory.totalLiquidityUSD.minus(pool.reserveUSD)
 
   // reset token total liquidity amounts
   token0.totalLiquidity = token0.totalLiquidity.minus(pool.reserve0)
@@ -586,6 +587,9 @@ export function handleSync(event: Sync): void {
   // reset pair reserves
   pair.reserve0 = pair.reserve0.minus(pool.reserve0)
   pair.reserve1 = pair.reserve1.minus(pool.reserve1)
+  pair.reserveETH = pair.reserveETH.minus(pool.reserveETH)
+  pair.trackedReserveETH = pair.trackedReserveETH.minus(pool.trackedReserveETH)
+  pair.reserveUSD = pair.reserveUSD.minus(pool.reserveUSD)
 
   if (token0.derivedETH.notEqual(ZERO_BD) && token1.derivedETH.notEqual(ZERO_BD)) {
     pair.token0Price = token0.derivedETH.div(token1.derivedETH)
@@ -657,10 +661,6 @@ export function handleSync(event: Sync): void {
   }
 
   pool.save()
-
-  // now correctly set reserves for pair
-  pair.reserve0 = pair.reserve0.plus(pool.reserve0)
-  pair.reserve1 = pair.reserve1.plus(pool.reserve1)
   pair.save()
 
   // update ETH price now that reserves could have changed
@@ -689,10 +689,6 @@ export function handleSync(event: Sync): void {
     ).div(bundle.ethPrice)
   }
 
-  pair.trackedReserveETH = trackedLiquidityETH
-  pair.reserveETH = pair.reserve0.times(token0.derivedETH).plus(pair.reserve1.times(token1.derivedETH))
-  pair.reserveUSD = pair.reserveETH.times(bundle.ethPrice)
-
   // use derived amounts within pool
   pool.trackedReserveETH = trackedLiquidityETH
   pool.amplifiedTrackedLiquidityEth = amplifiedTrackedLiquidityEth
@@ -700,12 +696,19 @@ export function handleSync(event: Sync): void {
   pool.reserveETH = pool.reserve0.times(token0.derivedETH).plus(pool.reserve1.times(token1.derivedETH))
   pool.reserveUSD = pool.reserveETH.times(bundle.ethPrice)
 
+  // now correctly set reserves for pair
+  pair.reserve0 = pair.reserve0.plus(pool.reserve0)
+  pair.reserve1 = pair.reserve1.plus(pool.reserve1)
+  pair.trackedReserveETH = pair.trackedReserveETH.plus(pool.trackedReserveETH)
+  pair.reserveETH = pair.reserveETH.plus(pool.reserveETH)
+  pair.reserveUSD = pair.reserveUSD.plus(pool.reserveUSD)
+
   // log.error("++++++++++ calculate pool reserve eth {} - {} {} {} {} {}", [pool.id, pool.reserve0.toString(), token0.derivedETH.toString(), pool.reserve1.toString(), token1.derivedETH.toString(), pool.reserveETH.toString()])
 
   log.error('============ tracked liquidity =================== {}', [trackedLiquidityETH.toString()])
-  // use tracked amounts globally
-  factory.totalLiquidityETH = factory.totalLiquidityETH.plus(trackedLiquidityETH)
-  factory.totalLiquidityUSD = factory.totalLiquidityETH.times(bundle.ethPrice)
+  // use untracked amounts globally
+  factory.totalLiquidityETH = factory.totalLiquidityETH.plus(pool.reserveETH)
+  factory.totalLiquidityUSD = factory.totalLiquidityUSD.plus(pool.reserveUSD)
   factory.totalAmplifiedLiquidityETH = factory.totalAmplifiedLiquidityETH.plus(pool.amplifiedTrackedLiquidityEth)
   factory.totalAmplifiedLiquidityUSD = factory.totalAmplifiedLiquidityETH.times(bundle.ethPrice)
 
