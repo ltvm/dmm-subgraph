@@ -485,8 +485,8 @@ export function handleSwap(event: Swap): void {
   )
 
   // update swap event
-  let tokenIn = amount1Out > BigDecimal.fromString('0') ? pair.token0 : pair.token1
-  let tokenOut = amount1Out > BigDecimal.fromString('0') ? pair.token1 : pair.token0
+  let tokenIn = amount1Out.gt(BigDecimal.fromString('0')) ? pair.token0 : pair.token1
+  let tokenOut = amount1Out.gt(BigDecimal.fromString('0')) ? pair.token1 : pair.token0
   swap.transaction = transaction.id
   swap.pool = pool.id
   swap.pair = pair.id
