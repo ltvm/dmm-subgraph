@@ -1,4 +1,4 @@
-import { log, BigInt } from '@graphprotocol/graph-ts'
+import { BigInt } from '@graphprotocol/graph-ts'
 import {
   KyberFairLaunch,
   Deposit as DepositEvent,
@@ -8,6 +8,7 @@ import {
 
 import { AddNewPool, Deposit, Harvest, Withdraw } from '../types/templates/KyberFairLaunch/KyberFairLaunch'
 import { createOrLoadTransaction } from './utils'
+import { createOrLoadFairLaunch, updateFairLaunchStakeTokens } from "./rewardLocker";
 
 export function handleDeposit(event: Deposit): void {
   let transaction = createOrLoadTransaction(event.transaction.hash, event.block)
@@ -70,7 +71,7 @@ export function handleAddNewPool(event: AddNewPool): void {
 
 export function handleHarvest(event: Harvest): void {
   let transaction = createOrLoadTransaction(event.transaction.hash, event.block)
-  let fairLaunch = KyberFairLaunch.load(event.address.toHex())
+  let fairLaunch = createOrLoadFairLaunch(event.address.toHex())
 
   let harvests = transaction.harvests
   let harvest = new HarvestEvent(
@@ -87,7 +88,10 @@ export function handleHarvest(event: Harvest): void {
   harvest.poolID = event.params.pid.toI32()
   harvest.fairLaunch = event.address.toHexString()
   harvest.rewardToken = event.params.rewardToken
-  harvest.fairLaunch = event.address.toHex()
+  if (fairLaunch.stakeTokens.length <= harvest.poolID) {
+    fairLaunch.stakeTokens = updateFairLaunchStakeTokens(event.address.toHex(), event.address)
+    fairLaunch.save()
+  }
   let stakeTokens = fairLaunch.stakeTokens
   harvest.stakeToken = stakeTokens[harvest.poolID]
   harvest.save()
