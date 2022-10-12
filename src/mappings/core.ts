@@ -49,7 +49,7 @@ export function handleTransfer(event: Transfer): void {
   let factoryAddress = poolContract.factory()
 
   let factory = DmmFactory.load(factoryAddress.toHexString())
-  log.debug("debug halink loaded factory: ", [factory.id.toString()])
+  log.debug("debug halink loaded factory: ", [factory.id])
 
   // user stats
   let from = event.params.from
@@ -241,8 +241,11 @@ export function handleMint(event: Mint): void {
   log.debug('___ debug halink handle mint ___', [])
   log.debug('!__________debug run to handle mint {}', [event.transaction.hash.toHexString()])
   let transaction = createOrLoadTransaction(event.transaction.hash, event.block)
-  log.debug('!_____ debug halink createOrLoadTransaction {}', [])
+  log.debug('!_____ debug halink createOrLoadTransaction {}', [transaction.id])
   let mints = transaction.mints
+  if (mints.length == 0) {
+    log.debug('is that ok that there is no mints?', [])
+  }
   log.debug('!_____ debug halink mints', [])
   let mint = MintEvent.load(mints[mints.length - 1])
 
